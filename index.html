@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NodeJs - Chat Real time</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+  </head>
+  <body>
+    <div id="acesso_usuario">
+      <form id="login">
+        <input
+          type="text"
+          placeholder="Insira seu apelido"
+          name="apelido"
+          id="apelido"
+          autocomplete="off"
+        />
+        <input type="submit" value="Entrar" />
+      </form>
+    </div>
+
+    <div id="sala_chat">
+      <div id="historico_mensagens">
+        <select multiple="multiple" id="lista_usuarios">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <form id="chat">
+        <input
+          type="text"
+          id="texto_mensagem"
+          name="texto_mensagem"
+          autocomplete="off"
+        />
+        <input type="submit" value="Enviar mensagem!" />
+      </form>
+    </div>
+
+    <script
+      type="text/javascript"
+      src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"
+    ></script>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+
+    <script type="text/javascript">
+      // Sends message, and returns a new html
+      var socket = io.connect()
+      $('form#chat').submit(function (e) {
+        e.preventDefault()
+        socket.emit(
+          'enviar mensagem',
+          $(this).find('#texto_mensagem').val(),
+          function () {
+            $('form#chat #texto_mensagem').val('')
+          },
+        )
+      })
+      socket.on('atualizar mensagens', function (mensagem) {
+        var mensagem_formatada = $('<p />').text(mensagem)
+        $('#historico_mensagens').append(mensagem_formatada)
+      })
+
+      //Submit a login form
+      $('form#login').submit(function (e) {
+        e.preventDefault()
+
+        socket.emit('entrar', $(this).find('#apelido').val(), function (
+          valido,
+        ) {
+          if (valido) {
+            $('#acesso_usuario').hide()
+            $('#sala_chat').show()
+          } else {
+            $('#acesso_usuario').val('')
+            alert('Nome indisponivel.')
+          }
+        })
+      })
+
+      socket.on('atualizar usuarios', function (usuarios) {
+        $('#lista_usuarios').empty()
+        $('#lista_usuarios').append("<option value=''>Todos</option>")
+        $.each(usuarios, function (indice) {
+          var opcao_usuario = $('<option />').text(usuarios[indice])
+          $('#lista_usuarios').append(opcao_usuario)
+        })
+      })
+    </script>
+  </body>
+</html>
